@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort - Ontario Waste Classifier</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♻️ EcoSort</h1>
+            <p class="subtitle">Ontario Waste Classification (2026 Standards)</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div id="drop-zone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <span class="upload-icon">📷</span>
+                        <p>Drag & drop an image here</p>
+                        <p>or</p>
+                        <label for="file-input" class="file-label">Choose File</label>
+                        <input type="file" id="file-input" accept="image/*" hidden>
+                    </div>
+                </div>
+                <div id="preview-container" class="preview-container hidden">
+                    <img id="preview-image" alt="Preview">
+                    <button id="clear-btn" class="clear-btn">×</button>
+                </div>
+            </div>
+
+            <button id="classify-btn" class="classify-btn" disabled>
+                <span id="btn-text">Classify Waste</span>
+                <span id="btn-loader" class="loader hidden"></span>
+            </button>
+
+            <div id="result-container" class="result-container hidden">
+                <div id="result-header">
+                    <span id="result-icon" class="result-icon"></span>
+                    <h2 id="result-class"></h2>
+                </div>
+                <p id="result-description"></p>
+                <div class="confidence-section">
+                    <div class="confidence-bar">
+                        <div id="confidence-fill" class="confidence-fill"></div>
+                    </div>
+                    <span id="confidence-value" class="confidence-value"></span>
+                </div>
+                <div id="all-probabilities" class="all-probabilities">
+                    <h3>All Categories</h3>
+                    <div id="probabilities-list"></div>
+                </div>
+            </div>
+
+            <div id="error-container" class="error-container hidden">
+                <p id="error-message"></p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Ontario 2026 Waste Sorting Standards</p>
+            <p>⚠️ Always verify with local guidelines for specific items</p>
+        </footer>
+    </div>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
