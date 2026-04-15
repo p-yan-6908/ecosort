@@ -2,16 +2,18 @@
 
 AI-powered waste classification system for Ontario, Canada (2026 Standards).
 
-## Features
+## ✨ Features
 
-- 🖼️ Image-based waste classification
-- 🍁 Ontario 2026 waste sorting standards
-- 🚀 Fast inference with MobileNetV3-Small
-- 🌐 Beautiful web interface
-- 📱 Mobile-responsive design
-- 🔧 Fine-tunable on custom data
+- 🖼️ **Image-based waste classification** - Upload or capture photos
+- 🍁 **Ontario 2026 waste sorting standards** - Up-to-date category mappings
+- 🚀 **Fast inference** - MobileNetV3-Small for quick predictions (~50ms)
+- 🌐 **Beautiful web interface** - Organic, forest-inspired design
+- 📱 **Mobile-responsive** - Works on phones, tablets, and desktops
+- 📊 **Batch prediction** - Process multiple images at once
+- 📜 **Prediction history** - Track recent classifications
+- 🔧 **Fine-tunable** - Train on custom data
 
-## Categories
+## 🗂️ Categories
 
 | Category | Icon | Items |
 |----------|------|-------|
@@ -22,7 +24,7 @@ AI-powered waste classification system for Ontario, Canada (2026 Standards).
 | Electronic Waste | 💻 | Computers, phones, cables |
 | Yard Waste | 🍂 | Leaves, grass, branches |
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -34,7 +36,7 @@ AI-powered waste classification system for Ontario, Canada (2026 Standards).
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/p-yan-6908/ecosort.git
 cd ecosort
 
 # Create virtual environment
@@ -71,62 +73,133 @@ uvicorn ecosort.api.main:app --host 0.0.0.0 --port 8000
 
 Open http://localhost:8000/static/index.html in your browser.
 
-## Project Structure
+## 📡 API Endpoints
+
+### Single Image Prediction
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@image.jpg"
+```
+
+### Batch Prediction
+
+```bash
+curl -X POST "http://localhost:8000/predict/batch" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "files=@image1.jpg" \
+  -F "files=@image2.jpg"
+```
+
+### Top-K Predictions
+
+```bash
+curl -X POST "http://localhost:8000/predict/top-k?k=3" \
+  -F "file=@image.jpg"
+```
+
+### Other Endpoints
+
+- `GET /classes` - List all categories
+- `GET /health` - Health check
+- `GET /metrics` - Model performance metrics
+
+Full API documentation at http://localhost:8000/docs
+
+## 📁 Project Structure
 
 ```
 ecosort/
 ├── ecosort/           # Main package
+│   ├── api/           # FastAPI endpoints
+│   │   └── routes/    # API route handlers
 │   ├── data/          # Dataset and transforms
 │   ├── models/        # Model architecture
 │   ├── training/      # Training pipeline
-│   ├── inference/     # Prediction logic
-│   └── api/           # FastAPI backend
-├── scripts/           # Training and utility scripts
+│   └── inference/     # Prediction logic
+├── tests/             # Test suite
+├── scripts/           # Training/utility scripts
 ├── web/               # Web interface
-├── data/              # Datasets
-└── models/            # Model checkpoints
+│   ├── js/            # JavaScript
+│   ├── css/           # Styles
+│   └── index.html     # Main page
+└── docs/              # Documentation
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 Edit `config.yaml` to customize:
-- Model architecture
-- Training hyperparameters
-- Data augmentation
-- API settings
 
-## API Endpoints
+```yaml
+model:
+  architecture: mobilenet_v3_small
+  num_classes: 3
+  dropout: 0.2
+  pretrained: true
 
-- `POST /predict` - Classify single image
-- `POST /predict/top-k` - Get top-k predictions
-- `GET /classes` - List all categories
-- `GET /health` - Health check
+training:
+  batch_size: 8
+  phase1:
+    epochs: 10
+    learning_rate: 0.01
+  phase2:
+    epochs: 20
+    learning_rate: 0.0001
+```
 
-## Training on Custom Data
+## 🧪 Testing
 
-1. Organize images in `data/processed/ontario/`:
-   ```
-   ontario/
-   ├── train/
-   │   ├── blue_bin/
-   │   ├── green_bin/
-   │   └── ...
-   ├── val/
-   └── test/
-   ```
+Run all tests:
 
-2. Run training:
-   ```bash
-   python scripts/train.py
-   ```
+```bash
+pytest tests/ -v
+```
 
-## Performance
+Run with coverage:
+
+```bash
+pytest tests/ --cov=ecosort --cov-report=html
+```
+
+## 🎨 Web Interface Features
+
+- **Drag & Drop** - Drop images directly onto the upload area
+- **Camera Capture** - Take photos with your device camera
+- **Confidence Display** - See how confident the model is
+- **Sorting Tips** - Get specific instructions for each category
+- **Prediction History** - View recent predictions (stored locally)
+- **Responsive Design** - Works on all screen sizes
+
+## 📊 Performance
 
 - Model size: ~4MB (quantized)
 - Inference time: ~50ms on CPU
 - RAM usage: ~200MB during inference
 - Target accuracy: 85%+ on Ontario categories
 
-## License
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests
+5. Submit a pull request
+
+## 📄 License
 
 MIT License
+
+## 🙏 Acknowledgments
+
+- TrashNet dataset for initial training data
+- Ontario Government for waste sorting standards
+- FastAPI and PyTorch communities
+
+---
+
+Made with 💚 for a cleaner Ontario

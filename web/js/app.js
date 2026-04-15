@@ -1,6 +1,11 @@
 // ========== State ==========
 let selectedFile = null;
 let currentTab = 'photo';
+let predictionHistory = [];
+
+// ========== Constants ==========
+const HISTORY_KEY = 'ecosort_history';
+const MAX_HISTORY = 10;
 
 // ========== DOM ==========
 const $ = (s) => document.querySelector(s);
@@ -80,6 +85,78 @@ const SORTING_TIPS = {
   ],
 };
 
+// ========== History Management ==========
+function loadHistory() {
+  try {
+    const saved = localStorage.getItem(HISTORY_KEY);
+    if (saved) {
+      predictionHistory = JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn('Could not load history:', e);
+    predictionHistory = [];
+  }
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(predictionHistory));
+  } catch (e) {
+    console.warn('Could not save history:', e);
+  }
+}
+
+function addToHistory(imageData, result) {
+  const entry = {
+    id: Date.now(),
+    image: imageData,
+    result: result,
+    timestamp: new Date().toISOString(),
+  };
+  
+  predictionHistory.unshift(entry);
+  if (predictionHistory.length > MAX_HISTORY) {
+    predictionHistory.pop();
+  }
+  saveHistory();
+  renderHistory();
+}
+
+function clearHistory() {
+  predictionHistory = [];
+  saveHistory();
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = $('#history-container');
+  if (!container) return;
+  
+  if (predictionHistory.length === 0) {
+    container.innerHTML = '<p class="history-empty">No predictions yet</p>';
+    return;
+  }
+  
+  container.innerHTML = predictionHistory.map(entry => {
+    const r = entry.result;
+    const color = r.color || CATEGORY_COLORS[r.class_name] || '#6b9b6b';
+    const icon = CATEGORY_ICONS[r.class_name] || '♻️';
+    const time = new Date(entry.timestamp).toLocaleTimeString();
+    
+    return `
+      <div class="history-item" data-id="${entry.id}">
+        <img src="${entry.image}" alt="Previous prediction" class="history-thumb">
+        <div class="history-info">
+          <span class="history-icon">${icon}</span>
+          <span class="history-name">${r.display_name}</span>
+          <span class="history-time">${time}</span>
+        </div>
+        <div class="history-confidence" style="background: ${color}">${(r.confidence * 100).toFixed(0)}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
 // ========== Tabs ==========
 $$('.tab').forEach(tab => {
   tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -92,20 +169,15 @@ function switchTab(tab) {
     t.setAttribute('aria-selected', t.dataset.tab === tab);
   });
 
-  // Show/hide panels
   const panels = {
     'photo': $('#panel-photo'),
-    'upload': $('#panel-photo'), // Same panel
+    'upload': $('#panel-photo'),
     'guide': null
   };
 
-  // Scroll to guide section if guide tab
   if (tab === 'guide') {
     document.querySelector('.guide-section')?.scrollIntoView({ behavior: 'smooth' });
-    // Switch back to photo tab visually
-    setTimeout(() => {
-      switchTab('photo');
-    }, 100);
+    setTimeout(() => { switchTab('photo'); }, 100);
   }
 }
 
@@ -127,7 +199,6 @@ dropZone.addEventListener('drop', (e) => {
   }
 });
 
-// Tab "keyboard" navigation
 dropZone.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
@@ -135,13 +206,11 @@ dropZone.addEventListener('keydown', (e) => {
   }
 });
 
-// Browse button - separate from drop zone
 btnBrowse.addEventListener('click', (e) => {
   e.stopPropagation();
   fileInput.click();
 });
 
-// Camera button
 btnCamera.addEventListener('click', (e) => {
   e.stopPropagation();
   cameraInput.click();
@@ -205,7 +274,12 @@ async function classifyImage() {
       const body = await resp.json().catch(() => ({}));
       throw new Error(body.detail || `Request failed (${resp.status})`);
     }
-    displayResults(await resp.json());
+    const result = await resp.json();
+    displayResults(result);
+    
+    // Save to history
+    const imageData = previewImage.src;
+    addToHistory(imageData, result);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -226,7 +300,6 @@ function displayResults(result) {
   const resultClass = $('#result-class');
   const resultDesc = $('#result-description');
 
-  // Use returned HTML color or fallback
   const color = result.color || CATEGORY_COLORS[result.class_name] || '#6b9b6b';
   const icon = CATEGORY_ICONS[result.class_name] || '♻️';
 
@@ -242,6 +315,10 @@ function displayResults(result) {
   $('#confidence-fill').style.width = `${pct}%`;
   $('#confidence-fill').style.background = color;
   $('#confidence-value').textContent = `${pct}%`;
+
+  // Confidence indicator class
+  const confidenceLevel = result.confidence >= 0.8 ? 'high' : result.confidence >= 0.5 ? 'medium' : 'low';
+  resultContainer.className = `result-panel confidence-${confidenceLevel}`;
 
   // Sorting tips
   const tipsContainer = $('#sorting-tips-container');
@@ -289,6 +366,7 @@ function showError(msg) {
     errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, 10);
 }
+
 function hideError() {
   errorContainer.classList.add('hidden');
 }
@@ -354,4 +432,15 @@ function renderCategoryCards() {
 }
 
 // ========== Init ==========
-renderCategoryCards();
+function init() {
+  renderCategoryCards();
+  loadHistory();
+  renderHistory();
+}
+
+// Run init when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
