@@ -1,8 +1,23 @@
-commit	val_accuracy	num_params_M	status	description
-f1606a2	0.903811	1.10	keep	baseline MobileNetV3-Small
-4903258	0.914701	1.26	keep	SE attention in classifier head
-0dc4434	0.943739	1.10	keep	ECA attention in classifier head - BEST
-f882a13	0.912886	3.44	discard	MobileNetV3-Large + ECA (larger, not better)
-f882a13	0.869328	21.00	discard	EfficientNetV2-S + ECA (too slow)
-f882a13	0.932849	1.10	keep	ECA + label_smoothing=0.1
-f882a13	0.934664	1.10	keep	ECA + label_smoothing=0.05 (best val during training)
+commit	val_accuracy	best_val_accuracy	num_params_M	status	description
+f1606a2	0.903811	0.903811	1.10	baseline	60s training baseline
+4903258	0.898367	0.914701	1.26	keep	SE attention head (60s)
+0dc4434	0.943739	0.943739	1.10	keep	ECA attention head (60s)
+---	---	---	---	---	--- FULL TRAINING EXPERIMENTS ---
+---	0.963702	0.963702	1.10	keep	Exp 1: Baseline (300s)
+---	0.949183	0.949183	1.10	discard	Exp 2: ECA only
+---	0.941924	0.960073	1.26	discard	Exp 3: SE attention
+---	0.972777	0.976407	1.10	BEST	Exp 4: ECA + LS 0.1 **BEST**
+---	0.965517	0.965517	1.10	keep	Exp 5: ECA + LS 0.05
+---	0.961887	0.967332	1.10	keep	Exp 6: Default + LS 0.1
+---	0.965517	0.969147	3.44	discard	Exp 7: MobileNetV3-Large + ECA
+---	0.947368	0.954628	1.10	discard	Exp 8: ECA + Mixup
+---	0.952813	0.954628	1.10	discard	Exp 9: ECA + Cutmix
+---	0.967332	0.967332	1.10	keep	Exp 10: ECA + LS 0.15
+---	0.967332	0.970962	1.10	keep	Exp 11: ECA + LS 0.2
+---	0.965517	0.965517	1.10	keep	Exp 12: ECA + Strong Aug
+---	0.936479	0.936479	1.10	discard	Exp 13: ECA + LS 0.1 + Strong Aug
+---	0.954628	0.954628	1.10	discard	Exp 14: ECA + Weight Decay
+---	0.960073	0.969147	1.10	keep	Exp 15: Default + LS 0.15
+---	0.949183	0.961887	1.10	discard	Exp 16: ECA + LS 0.1 + Higher LR
+---	0.970962	0.970962	1.10	keep	Exp 17: ECA + LS 0.12
+---	0.970962	0.970962	1.10	keep	Exp 18: ECA + LS 0.08
