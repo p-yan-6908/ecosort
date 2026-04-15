@@ -1,3 +1,4 @@
 commit	val_accuracy	num_params_M	status	description
 f1606a2	0.903811	1.10	keep	baseline MobileNetV3-Small
 4903258	0.914701	1.26	keep	SE attention in classifier head
+0dc4434	0.943739	1.10	keep	ECA attention in classifier head - +4% improvement
