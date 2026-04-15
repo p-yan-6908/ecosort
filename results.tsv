@@ -1,4 +1,8 @@
 commit	val_accuracy	num_params_M	status	description
 f1606a2	0.903811	1.10	keep	baseline MobileNetV3-Small
 4903258	0.914701	1.26	keep	SE attention in classifier head
-0dc4434	0.943739	1.10	keep	ECA attention in classifier head - +4% improvement
+0dc4434	0.943739	1.10	keep	ECA attention in classifier head - BEST
+f882a13	0.912886	3.44	discard	MobileNetV3-Large + ECA (larger, not better)
+f882a13	0.869328	21.00	discard	EfficientNetV2-S + ECA (too slow)
+f882a13	0.932849	1.10	keep	ECA + label_smoothing=0.1
+f882a13	0.934664	1.10	keep	ECA + label_smoothing=0.05 (best val during training)
