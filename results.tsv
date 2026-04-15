@@ -1,1 +1,2 @@
 commit	val_accuracy	num_params_M	status	description
+f1606a2	0.903811	1.10	keep	baseline MobileNetV3-Small

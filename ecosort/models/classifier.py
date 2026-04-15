@@ -4,14 +4,15 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-from ecosort.models.layers import ClassifierHead
+from ecosort.models.layers import ClassifierHead, ClassifierHeadWithSE, ClassifierHeadWithECA
 
 
 class WasteClassifier(nn.Module):
-    """MobileNetV3-Small based waste classifier with two-phase training support."""
+    """MobileNetV3-Small based waste classifier."""
 
     def __init__(
-        self, num_classes: int = 6, dropout: float = 0.2, pretrained: bool = True
+        self, num_classes: int = 6, dropout: float = 0.2, pretrained: bool = True,
+        head_type: str = "default"
     ):
         super().__init__()
         self.num_classes = num_classes
@@ -22,9 +23,19 @@ class WasteClassifier(nn.Module):
 
         in_features = self.backbone.classifier[0].in_features
 
-        self.backbone.classifier = ClassifierHead(
-            in_features=in_features, num_classes=num_classes, dropout=dropout
-        )
+        # Select classifier head type
+        if head_type == "se":
+            self.backbone.classifier = ClassifierHeadWithSE(
+                in_features=in_features, num_classes=num_classes, dropout=dropout
+            )
+        elif head_type == "eca":
+            self.backbone.classifier = ClassifierHeadWithECA(
+                in_features=in_features, num_classes=num_classes, dropout=dropout
+            )
+        else:
+            self.backbone.classifier = ClassifierHead(
+                in_features=in_features, num_classes=num_classes, dropout=dropout
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.backbone(x)
