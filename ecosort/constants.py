@@ -12,6 +12,7 @@ class WasteCategory:
     color: str
     icon: str
     description: str
+    sorting_tips: tuple = ()
 
 
 ONTARIO_CATEGORIES: List[WasteCategory] = [
@@ -22,6 +23,12 @@ ONTARIO_CATEGORIES: List[WasteCategory] = [
         "#2563EB",
         "♻️",
         "Cardboard, paper, plastic, metal, glass, black plastic, Styrofoam",
+        (
+            "Rinse containers before recycling",
+            "Flatten cardboard boxes",
+            "Remove caps from bottles",
+            "No black plastic or Styrofoam in most municipalities",
+        ),
     ),
     WasteCategory(
         1,
@@ -30,6 +37,12 @@ ONTARIO_CATEGORIES: List[WasteCategory] = [
         "#16A34A",
         "🌿",
         "Food scraps, soiled paper, coffee grounds, pet waste",
+        (
+            "Use certified compostable bags",
+            "No plastic bags in green bin",
+            "Include meat, bones, dairy",
+            "Soiled paper towels and napkins go here",
+        ),
     ),
     WasteCategory(
         2,
@@ -38,6 +51,12 @@ ONTARIO_CATEGORIES: List[WasteCategory] = [
         "#1F2937",
         "🗑️",
         "Non-recyclables, compostable plastics, ceramics",
+        (
+            "Last resort — check other bins first",
+            "Compostable plastics go to garbage, not green bin",
+            "Broken ceramics and mirrors go here",
+            "Bag all garbage securely",
+        ),
     ),
     WasteCategory(
         3,
@@ -46,6 +65,12 @@ ONTARIO_CATEGORIES: List[WasteCategory] = [
         "#DC2626",
         "⚠️",
         "Batteries, paint, chemicals, propane",
+        (
+            "Take to designated drop-off depots",
+            "Never put in regular garbage or recycling",
+            "Keep in original containers",
+            "Check municipality for depot hours",
+        ),
     ),
     WasteCategory(
         4,
@@ -54,6 +79,12 @@ ONTARIO_CATEGORIES: List[WasteCategory] = [
         "#7C3AED",
         "💻",
         "Computers, phones, cables, small appliances",
+        (
+            "Drop off at e-waste depots or retail stores",
+            "Wipe personal data before disposal",
+            "Cables and chargers count as e-waste",
+            "Many retailers accept old electronics",
+        ),
     ),
     WasteCategory(
         5,
@@ -62,6 +93,12 @@ ONTARIO_CATEGORIES: List[WasteCategory] = [
         "#65A30D",
         "🍂",
         "Leaves, grass clippings, branches",
+        (
+            "Use paper yard waste bags or open containers",
+            "No plastic bags",
+            "Branches must be under 10cm diameter",
+            "Check seasonal curbside collection dates",
+        ),
     ),
 ]
 
