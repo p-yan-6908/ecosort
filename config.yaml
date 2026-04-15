@@ -1,9 +1,11 @@
 # EcoSort Configuration - Ontario Waste Classifier
+# Updated after autoresearch experiments
 
 # Model Configuration
 model:
   architecture: mobilenet_v3_small
-  num_classes: 3  # blue_bin, green_bin, garbage
+  head_type: eca  # ECA attention - best performing in autoresearch
+  num_classes: 6  # All 6 Ontario categories
   dropout: 0.2
   pretrained: true
 
@@ -17,7 +19,8 @@ training:
     epochs: 20
     learning_rate: 0.0001
     scheduler: cosine
-  batch_size: 8
+  batch_size: 32  # Increased from 8 for better GPU utilization
+  label_smoothing: 0.05  # Slight improvement from autoresearch
 
 # Data Configuration
 data:
