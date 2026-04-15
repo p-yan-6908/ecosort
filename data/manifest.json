@@ -1,0 +1,43 @@
+{
+  "trashnet": {
+    "path": "raw/trashnet/dataset-resized",
+    "categories": [
+      "glass",
+      "paper",
+      "cardboard",
+      "plastic",
+      "metal",
+      "trash"
+    ],
+    "count": 2527
+  },
+  "realwaste": {
+    "path": "raw/realwaste",
+    "categories": [
+      "Cardboard",
+      "Food Organics",
+      "Glass",
+      "Metal",
+      "Miscellaneous Trash",
+      "Paper",
+      "Plastic",
+      "Textile Trash",
+      "Vegetation"
+    ],
+    "count": 4752
+  },
+  "green_bin_organic": {
+    "path": "raw/downloads/green_bin_organic",
+    "categories": [
+      "food_waste"
+    ],
+    "count": 750
+  },
+  "TACO": {
+    "path": "raw/downloads/TACO/data",
+    "categories": [
+      "various"
+    ],
+    "count": 230
+  }
+}

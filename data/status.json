@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-04-15",
+  "raw_datasets": {
+    "trashnet": {
+      "path": "raw/trashnet/dataset-resized",
+      "images": 2527,
+      "categories": {
+        "glass": 501,
+        "paper": 594,
+        "cardboard": 403,
+        "plastic": 482,
+        "metal": 410,
+        "trash": 137
+      },
+      "status": "complete"
+    },
+    "realwaste": {
+      "path": "raw/realwaste",
+      "images": 4752,
+      "downloaded_mb": 93,
+      "status": "partial_download"
+    },
+    "green_bin_organic": {
+      "path": "raw/downloads/green_bin_organic",
+      "images": 750,
+      "status": "complete"
+    },
+    "TACO": {
+      "path": "raw/downloads/TACO",
+      "images": 283,
+      "status": "complete"
+    }
+  },
+  "processed_ontario": {
+    "train": {
+      "blue_bin": 1673,
+      "green_bin": 533,
+      "garbage": 500,
+      "hazardous": 0,
+      "e_waste": 0,
+      "yard_waste": 0
+    },
+    "val": {
+      "blue_bin": 358,
+      "green_bin": 114,
+      "garbage": 20,
+      "hazardous": 0,
+      "e_waste": 0,
+      "yard_waste": 0
+    },
+    "test": {
+      "blue_bin": 359,
+      "green_bin": 115,
+      "garbage": 22,
+      "hazardous": 0,
+      "e_waste": 0,
+      "yard_waste": 0
+    }
+  },
+  "missing_categories": [
+    "hazardous",
+    "e_waste",
+    "yard_waste"
+  ],
+  "total_raw_images": 3560,
+  "total_processed_images": 3694
+}
