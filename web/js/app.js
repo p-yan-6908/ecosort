@@ -1,14 +1,18 @@
 // ========== State ==========
+let currentPredictionId = null;
+
 let selectedFile = null;
 let currentTab = 'photo';
 let predictionHistory = [];
 let batchFiles = []; // Array of { file, id, preview }
 let isBatchProcessing = false;
-
+let imageRotation = 0; // 0, 90, 180, 270 degrees
 // ========== Constants ==========
 const HISTORY_KEY = 'ecosort_history';
 const MAX_HISTORY = 10;
 const MAX_BATCH_FILES = 10;
+const FEEDBACK_KEY = 'ecosort_feedback';
+
 
 // ========== DOM ==========
 const $ = (s) => document.querySelector(s);
@@ -22,6 +26,7 @@ const btnCamera = $('#btn-camera');
 const previewContainer = $('#preview-container');
 const previewImage = $('#preview-image');
 const clearBtn = $('#clear-btn');
+const rotateBtn = $('#rotate-btn');
 const classifyBtn = $('#classify-btn');
 const btnContent = $('#btn-content');
 const btnLoader = $('#btn-loader');
@@ -144,6 +149,82 @@ function addToHistory(imageData, result) {
   renderHistory();
 }
 
+// ========== Feedback Management ==========
+function handleFeedback(type) {
+  if (!currentPredictionId) return;
+
+  // Save feedback to localStorage
+  try {
+    const saved = localStorage.getItem(FEEDBACK_KEY);
+    const feedback = saved ? JSON.parse(saved) : {};
+    feedback[currentPredictionId] = type;
+    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedback));
+  } catch (e) {
+    console.warn('Could not save feedback:', e);
+  }
+
+  // Update UI
+  const upBtn = $('#feedback-up');
+  const downBtn = $('#feedback-down');
+
+  if (type === 'up') {
+    upBtn.classList.add('active');
+    downBtn.classList.remove('active');
+  } else {
+    downBtn.classList.add('active');
+    upBtn.classList.remove('active');
+  }
+
+  // Disable both buttons
+  upBtn.disabled = true;
+  downBtn.disabled = true;
+
+  // Show thank you message
+  const thanks = $('#feedback-thanks');
+  thanks.classList.remove('hidden');
+}
+
+function checkExistingFeedback() {
+  if (!currentPredictionId) return;
+
+  try {
+    const saved = localStorage.getItem(FEEDBACK_KEY);
+    if (!saved) return;
+
+    const feedback = JSON.parse(saved);
+    const existing = feedback[currentPredictionId];
+
+    if (existing) {
+      const upBtn = $('#feedback-up');
+      const downBtn = $('#feedback-down');
+
+      if (existing === 'up') {
+        upBtn.classList.add('active');
+      } else {
+        downBtn.classList.add('active');
+      }
+      upBtn.disabled = true;
+      downBtn.disabled = true;
+      $('#feedback-thanks').classList.remove('hidden');
+    }
+  } catch (e) {
+    console.warn('Could not check feedback:', e);
+  }
+}
+
+function resetFeedbackUI() {
+  const upBtn = $('#feedback-up');
+  const downBtn = $('#feedback-down');
+  const thanks = $('#feedback-thanks');
+
+  upBtn?.classList.remove('active');
+  downBtn?.classList.remove('active');
+  upBtn?.removeAttribute('disabled');
+  downBtn?.removeAttribute('disabled');
+  thanks?.classList.add('hidden');
+}
+
+
 function clearHistory() {
   predictionHistory = [];
   saveHistory();
@@ -249,8 +330,47 @@ cameraInput.addEventListener('change', (e) => {
   if (e.target.files.length > 0) handleFile(e.target.files[0]);
 });
 
+// ========== Examples ==========
+async function handleExampleClick(category) {
+  try {
+    const response = await fetch(`/static/examples/${category}.jpg`);
+    if (!response.ok) throw new Error('Failed to load example');
+    const blob = await response.blob();
+    const file = new File([blob], `${category}_example.jpg`, { type: 'image/jpeg' });
+    
+    // Use existing handleFile to process the example
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImage.src = e.target.result;
+      dropZone.closest('.tab-panel').classList.add('hidden');
+      previewContainer.classList.remove('hidden');
+      classifyBtn.disabled = false;
+      hideError();
+      hideResults();
+      
+      // Auto-trigger classification
+      setTimeout(() => classifyImage(), 100);
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    showError('Could not load example image: ' + err.message);
+  }
+}
+
+function initExamples() {
+  $$('.example-thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const category = thumb.dataset.category;
+      handleExampleClick(category);
+    });
+  });
+}
+
+
 clearBtn.addEventListener('click', clearSelection);
 classifyBtn.addEventListener('click', classifyImage);
+rotateBtn.addEventListener('click', rotatePreview);
 
 // ========== Batch Event Listeners ==========
 batchDropZone.addEventListener('dragover', (e) => {
@@ -312,10 +432,13 @@ function handleFile(file) {
 }
 
 function clearSelection() {
+function clearSelection() {
   selectedFile = null;
   fileInput.value = '';
   cameraInput.value = '';
   previewImage.src = '';
+  imageRotation = 0;
+  previewImage.style.transform = '';
   dropZone.closest('.tab-panel').classList.remove('hidden');
   previewContainer.classList.add('hidden');
   classifyBtn.disabled = true;
@@ -324,6 +447,13 @@ function clearSelection() {
 }
 
 // ========== Batch File Handling ==========
+
+// ========== Image Rotation ==========
+function rotatePreview() {
+  imageRotation = (imageRotation + 90) % 360;
+  previewImage.style.transform = `rotate(${imageRotation}deg)`;
+}
+
 function handleBatchFiles(files) {
   const filesArray = Array.from(files).filter(f => f.type.startsWith('image/'));
   
@@ -615,6 +745,12 @@ function displayResults(result) {
     probList.appendChild(el);
   }
 
+
+  // Set current prediction ID and reset/check feedback
+  currentPredictionId = Date.now().toString();
+  resetFeedbackUI();
+  checkExistingFeedback();
+
   resultContainer.classList.remove('hidden');
   resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -696,12 +832,70 @@ function renderCategoryCards() {
   `).join('');
 }
 
+// ========== Model Stats ==========
+async function loadModelStats() {
+  try {
+    const resp = await fetch('/metrics');
+    if (!resp.ok) {
+      console.warn('Could not load model stats');
+      return;
+    }
+
+    const data = await resp.json();
+
+    // Update accuracy
+    if (data.performance?.test_accuracy) {
+      const accuracy = (data.performance.test_accuracy * 100).toFixed(2);
+      $('#model-accuracy').textContent = `${accuracy}%`;
+    }
+
+    // Update parameters (format as 1.1M)
+    if (data.model?.num_parameters) {
+      const params = data.model.num_parameters;
+      const paramsFormatted = params >= 1_000_000
+        ? `${(params / 1_000_000).toFixed(1)}M`
+        : params >= 1_000
+          ? `${(params / 1_000).toFixed(1)}K`
+          : params.toString();
+      $('#model-parameters').textContent = paramsFormatted;
+    }
+
+    // Update architecture
+    if (data.model?.architecture) {
+      const arch = data.model.architecture
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+      $('#model-architecture').textContent = arch;
+    }
+  } catch (e) {
+    console.warn('Failed to load model stats:', e);
+  }
+}
+
+// Toggle model info visibility
+function initModelInfoToggle() {
+  const toggle = $('#model-info-toggle');
+  const content = $('#model-info-content');
+
+  if (!toggle || !content) return;
+
+  toggle.addEventListener('click', () => {
+    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', !isExpanded);
+    content.classList.toggle('hidden');
+  });
+}
+
+
 // ========== Init ==========
 function init() {
   initTheme();
   renderCategoryCards();
   loadHistory();
   renderHistory();
+  initExamples();
+  initModelInfoToggle();
+  loadModelStats();
 }
 
 
@@ -732,4 +926,87 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
+}
+
+
+// ========== Keyboard Shortcuts ==========
+function handleKeyboardShortcut(e) {
+  // Ignore if user is typing in an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+    return;
+  }
+
+  const helpModal = $('#help-modal');
+  const isModalOpen = !helpModal.classList.contains('hidden');
+
+  switch (e.key) {
+    case '?':
+      e.preventDefault();
+      toggleHelpModal();
+      break;
+    case 'Escape':
+      if (isModalOpen) {
+        e.preventDefault();
+        toggleHelpModal();
+      } else if (!previewContainer.classList.contains('hidden')) {
+        e.preventDefault();
+        clearSelection();
+      }
+      break;
+    case 'Enter':
+      if (!previewContainer.classList.contains('hidden') && !classifyBtn.disabled) {
+        e.preventDefault();
+        classifyImage();
+      }
+      break;
+    case '1':
+      e.preventDefault();
+      switchTab('photo');
+      break;
+    case '2':
+      e.preventDefault();
+      switchTab('upload');
+      break;
+    case '3':
+      e.preventDefault();
+      switchTab('batch');
+      break;
+    case '4':
+      e.preventDefault();
+      switchTab('guide');
+      break;
+  }
+}
+
+function toggleHelpModal() {
+  const modal = $('#help-modal');
+  const isHidden = modal.classList.contains('hidden');
+
+  if (isHidden) {
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    $('#help-close').focus();
+  } else {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Keyboard event listener
+document.addEventListener('keydown', handleKeyboardShortcut);
+
+// Help modal close handlers
+$('#help-close')?.addEventListener('click', toggleHelpModal);
+$('#help-backdrop')?.addEventListener('click', toggleHelpModal);
+// Help modal close handlers - fix syntax
+$("#help-close")?.addEventListener("click", toggleHelpModal);
+$("#help-backdrop")?.addEventListener("click", toggleHelpModal);
+
+// Run init when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
 }

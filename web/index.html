@@ -99,6 +99,37 @@
             </div>
           </div>
         </div>
+        <!-- Examples Section -->
+        <div class="examples-section" id="examples-section">
+          <p class="examples-title">Try with examples</p>
+          <div class="examples-grid">
+            <button class="example-thumb" data-category="blue_bin" aria-label="Try blue bin example">
+              <img src="/static/examples/blue_bin.jpg" alt="Blue bin recyclable" loading="lazy">
+              <span class="example-label">♻️</span>
+            </button>
+            <button class="example-thumb" data-category="green_bin" aria-label="Try green bin example">
+              <img src="/static/examples/green_bin.jpg" alt="Green bin organic" loading="lazy">
+              <span class="example-label">🌿</span>
+            </button>
+            <button class="example-thumb" data-category="garbage" aria-label="Try garbage example">
+              <img src="/static/examples/garbage.jpg" alt="Garbage" loading="lazy">
+              <span class="example-label">🗑️</span>
+            </button>
+            <button class="example-thumb" data-category="hazardous" aria-label="Try hazardous example">
+              <img src="/static/examples/hazardous.jpg" alt="Hazardous waste" loading="lazy">
+              <span class="example-label">⚠️</span>
+            </button>
+            <button class="example-thumb" data-category="e_waste" aria-label="Try e-waste example">
+              <img src="/static/examples/e_waste.jpg" alt="E-waste" loading="lazy">
+              <span class="example-label">💻</span>
+            </button>
+            <button class="example-thumb" data-category="yard_waste" aria-label="Try yard waste example">
+              <img src="/static/examples/yard_waste.jpg" alt="Yard waste" loading="lazy">
+              <span class="example-label">🍂</span>
+            </button>
+          </div>
+        </div>
+
       </div>
 
       <!-- Batch Tab Panel -->
@@ -164,6 +195,12 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          <button class="preview-rotate" id="rotate-btn" aria-label="Rotate image 90 degrees">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
             </svg>
           </button>
         </div>
@@ -250,6 +287,25 @@
           <ul class="tips-list" id="sorting-tips-list"></ul>
         </div>
 
+
+        <!-- Feedback Section -->
+        <div class="feedback-section" id="feedback-section">
+          <p class="feedback-question">Was this prediction correct?</p>
+          <div class="feedback-buttons">
+            <button class="feedback-btn" id="feedback-up" onclick="handleFeedback('up')" aria-label="Thumbs up">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+              </svg>
+            </button>
+            <button class="feedback-btn" id="feedback-down" onclick="handleFeedback('down')" aria-label="Thumbs down">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/>
+              </svg>
+            </button>
+          </div>
+          <p class="feedback-thanks hidden" id="feedback-thanks">Thank you!</p>
+        </div>
+
         <div class="all-categories">
           <h3 class="categories-heading">All possibilities</h3>
           <div class="category-bars" id="probabilities-list"></div>
@@ -301,6 +357,49 @@
       <div class="categories-grid" id="categories-grid"></div>
     </section>
 
+    <!-- Model Info -->
+    <section class="model-info" id="model-info" aria-label="Model information">
+      <button class="model-info-toggle" id="model-info-toggle" aria-expanded="false" aria-controls="model-info-content">
+        <span class="model-info-icon">🧠</span>
+        <span class="model-info-label">Model Stats</span>
+        <svg class="model-info-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="model-info-content hidden" id="model-info-content">
+        <div class="model-info-grid">
+          <div class="model-info-item">
+            <span class="model-info-stat-icon">🎯</span>
+            <div class="model-info-stat">
+              <span class="model-info-value" id="model-accuracy">--%</span>
+              <span class="model-info-name">Accuracy</span>
+            </div>
+          </div>
+          <div class="model-info-item">
+            <span class="model-info-stat-icon">🧠</span>
+            <div class="model-info-stat">
+              <span class="model-info-value" id="model-parameters">--</span>
+              <span class="model-info-name">Parameters</span>
+            </div>
+          </div>
+          <div class="model-info-item">
+            <span class="model-info-stat-icon">📐</span>
+            <div class="model-info-stat">
+              <span class="model-info-value" id="model-architecture">--</span>
+              <span class="model-info-name">Architecture</span>
+            </div>
+          </div>
+          <div class="model-info-item">
+            <span class="model-info-stat-icon">📅</span>
+            <div class="model-info-stat">
+              <span class="model-info-value" id="model-date">2026</span>
+              <span class="model-info-name">Training</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
       <p>Ontario 2026 Waste Sorting Standards</p>
@@ -308,6 +407,50 @@
     </footer>
   </main>
 
+  <!-- Help Modal -->
+  <div class="help-modal hidden" id="help-modal" role="dialog" aria-labelledby="help-title" aria-hidden="true">
+    <div class="help-backdrop" id="help-backdrop"></div>
+    <div class="help-content">
+      <button class="help-close" id="help-close" aria-label="Close help">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="help-title" class="help-title">Keyboard Shortcuts</h2>
+      <div class="help-shortcuts">
+        <div class="shortcut-row">
+          <kbd class="key">1</kbd>
+          <span class="shortcut-desc">Take Photo tab</span>
+        </div>
+        <div class="shortcut-row">
+          <kbd class="key">2</kbd>
+          <span class="shortcut-desc">Upload tab</span>
+        </div>
+        <div class="shortcut-row">
+          <kbd class="key">3</kbd>
+          <span class="shortcut-desc">Batch tab</span>
+        </div>
+        <div class="shortcut-row">
+          <kbd class="key">4</kbd>
+          <span class="shortcut-desc">Guide tab</span>
+        </div>
+        <div class="shortcut-row">
+          <kbd class="key">Enter</kbd>
+          <span class="shortcut-desc">Classify image</span>
+        </div>
+        <div class="shortcut-row">
+          <kbd class="key">Escape</kbd>
+          <span class="shortcut-desc">Clear selection / Close modal</span>
+        </div>
+        <div class="shortcut-row">
+          <kbd class="key">?</kbd>
+          <span class="shortcut-desc">Show/hide this help</span>
+        </div>
+      </div>
+      <p class="help-hint">Press <kbd class="key-sm">?</kbd> anytime to toggle help</p>
+    </div>
+  </div>
   <script src="/static/js/app.js"></script>
 </body>
 </html>
