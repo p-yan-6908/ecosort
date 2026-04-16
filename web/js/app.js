@@ -2,10 +2,13 @@
 let selectedFile = null;
 let currentTab = 'photo';
 let predictionHistory = [];
+let batchFiles = []; // Array of { file, id, preview }
+let isBatchProcessing = false;
 
 // ========== Constants ==========
 const HISTORY_KEY = 'ecosort_history';
 const MAX_HISTORY = 10;
+const MAX_BATCH_FILES = 10;
 
 // ========== DOM ==========
 const $ = (s) => document.querySelector(s);
@@ -25,6 +28,25 @@ const btnLoader = $('#btn-loader');
 const resultContainer = $('#result-container');
 const errorContainer = $('#error-container');
 const errorMessage = $('#error-message');
+
+// Batch DOM elements
+const batchDropZone = $('#batch-drop-zone');
+const batchFileInput = $('#batch-file-input');
+const btnBatchBrowse = $('#btn-batch-browse');
+const batchFileList = $('#batch-file-list');
+const batchFilesContainer = $('#batch-files');
+const batchCount = $('#batch-count');
+const btnClearBatch = $('#btn-clear-batch');
+const btnClassifyBatch = $('#btn-classify-batch');
+const btnBatchContent = $('#btn-batch-content');
+const btnBatchLoader = $('#btn-batch-loader');
+const batchProgress = $('#batch-progress');
+const batchProgressFill = $('#batch-progress-fill');
+const batchProgressLabel = $('#batch-progress-text');
+const batchProgressText = $('#batch-progress-label');
+const batchResults = $('#batch-results');
+const batchResultsList = $('#batch-results-list');
+const btnClearBatchResults = $('#btn-clear-batch-results');
 
 // ========== Category colors (earthy tones) ==========
 const CATEGORY_COLORS = {
@@ -169,13 +191,16 @@ function switchTab(tab) {
     t.setAttribute('aria-selected', t.dataset.tab === tab);
   });
 
-  const panels = {
-    'photo': $('#panel-photo'),
-    'upload': $('#panel-photo'),
-    'guide': null
-  };
-
-  if (tab === 'guide') {
+  // Hide all panels
+  $('#panel-photo')?.classList.add('hidden');
+  $('#panel-batch')?.classList.add('hidden');
+  
+  // Show selected panel
+  if (tab === 'photo' || tab === 'upload') {
+    $('#panel-photo')?.classList.remove('hidden');
+  } else if (tab === 'batch') {
+    $('#panel-batch')?.classList.remove('hidden');
+  } else if (tab === 'guide') {
     document.querySelector('.guide-section')?.scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => { switchTab('photo'); }, 100);
   }
@@ -227,6 +252,46 @@ cameraInput.addEventListener('change', (e) => {
 clearBtn.addEventListener('click', clearSelection);
 classifyBtn.addEventListener('click', classifyImage);
 
+// ========== Batch Event Listeners ==========
+batchDropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  batchDropZone.classList.add('drag-over');
+});
+
+batchDropZone.addEventListener('dragleave', () => {
+  batchDropZone.classList.remove('drag-over');
+});
+
+batchDropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  batchDropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length > 0) {
+    handleBatchFiles(e.dataTransfer.files);
+  }
+});
+
+batchDropZone.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    batchFileInput.click();
+  }
+});
+
+btnBatchBrowse.addEventListener('click', (e) => {
+  e.stopPropagation();
+  batchFileInput.click();
+});
+
+batchFileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) {
+    handleBatchFiles(e.target.files);
+  }
+});
+
+btnClearBatch.addEventListener('click', clearBatch);
+btnClassifyBatch.addEventListener('click', classifyBatch);
+btnClearBatchResults.addEventListener('click', clearBatchResults);
+
 // ========== File Handling ==========
 function handleFile(file) {
   if (!file.type.startsWith('image/')) {
@@ -256,6 +321,206 @@ function clearSelection() {
   classifyBtn.disabled = true;
   hideResults();
   hideError();
+}
+
+// ========== Batch File Handling ==========
+function handleBatchFiles(files) {
+  const filesArray = Array.from(files).filter(f => f.type.startsWith('image/'));
+  
+  if (filesArray.length === 0) {
+    showError('Please select image files.');
+    return;
+  }
+  
+  const remainingSlots = MAX_BATCH_FILES - batchFiles.length;
+  if (remainingSlots <= 0) {
+    showError(`Maximum ${MAX_BATCH_FILES} files allowed.`);
+    return;
+  }
+  
+  const toAdd = filesArray.slice(0, remainingSlots);
+  const overflow = filesArray.length > remainingSlots;
+  
+  toAdd.forEach(file => {
+    const id = 'batch-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      batchFiles.push({
+        id,
+        file,
+        preview: e.target.result
+      });
+      renderBatchFiles();
+    };
+    reader.readAsDataURL(file);
+  });
+  
+  if (overflow) {
+    showError(`Only added ${remainingSlots} files. Maximum ${MAX_BATCH_FILES} files allowed.`);
+  }
+  
+  batchDropZone.classList.add('hidden');
+  batchFileList.classList.remove('hidden');
+}
+
+function renderBatchFiles() {
+  batchCount.textContent = `${batchFiles.length} file${batchFiles.length !== 1 ? 's' : ''} selected`;
+  
+  batchFilesContainer.innerHTML = batchFiles.map((item, index) => `
+    <div class="batch-file-item" data-id="${item.id}">
+      <img src="${item.preview}" alt="" class="batch-file-thumb">
+      <div class="batch-file-info">
+        <div class="batch-file-name">${item.file.name}</div>
+        <div class="batch-file-size">${formatFileSize(item.file.size)}</div>
+      </div>
+      <button class="batch-file-remove" data-id="${item.id}" aria-label="Remove file">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  `).join('');
+  
+  // Add remove handlers
+  batchFilesContainer.querySelectorAll('.batch-file-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      removeBatchFile(id);
+    });
+  });
+  
+  btnClassifyBatch.disabled = batchFiles.length === 0 || isBatchProcessing;
+}
+
+function removeBatchFile(id) {
+  batchFiles = batchFiles.filter(f => f.id !== id);
+  renderBatchFiles();
+  
+  if (batchFiles.length === 0) {
+    clearBatch();
+  }
+}
+
+function clearBatch() {
+  batchFiles = [];
+  batchFileInput.value = '';
+  batchFileList.classList.add('hidden');
+  batchDropZone.classList.remove('hidden');
+  batchProgress.classList.add('hidden');
+  btnClassifyBatch.disabled = true;
+  hideError();
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ========== Batch Classification ==========
+async function classifyBatch() {
+  if (batchFiles.length === 0 || isBatchProcessing) return;
+  
+  isBatchProcessing = true;
+  btnClassifyBatch.disabled = true;
+  btnBatchContent.classList.add('hidden');
+  btnBatchLoader.classList.remove('hidden');
+  batchProgress.classList.remove('hidden');
+  batchResults.classList.add('hidden');
+  hideError();
+  
+  const formData = new FormData();
+  batchFiles.forEach(item => {
+    formData.append('files', item.file);
+  });
+  
+  try {
+    const resp = await fetch('/predict/batch', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!resp.ok) {
+      const body = await resp.json().catch(() => ({}));
+      throw new Error(body.detail || `Request failed (${resp.status})`);
+    }
+    
+    const results = await resp.json();
+    displayBatchResults(results);
+    
+    // Add successful predictions to history (first one only to avoid spam)
+    if (results.length > 0 && results[0].success && results[0].result) {
+      addToHistory(batchFiles[0].preview, results[0].result);
+    }
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    isBatchProcessing = false;
+    btnBatchContent.classList.remove('hidden');
+    btnBatchLoader.classList.add('hidden');
+    btnClassifyBatch.disabled = batchFiles.length === 0;
+    batchProgress.classList.add('hidden');
+  }
+}
+
+function displayBatchResults(results) {
+  batchResultsList.innerHTML = '';
+  
+  results.forEach((item, index) => {
+    const fileItem = batchFiles[index];
+    const card = document.createElement('div');
+    card.className = 'batch-result-card';
+    card.style.animationDelay = `${index * 0.1}s`;
+    
+    if (!item.success || !item.result) {
+      card.innerHTML = `
+        <img src="${fileItem?.preview || ''}" alt="" class="batch-result-thumb">
+        <div class="batch-result-info">
+          <div class="batch-error">Failed: ${item.error || 'Unknown error'}</div>
+          <div class="batch-file-name">${fileItem?.file?.name || 'Unknown'}</div>
+        </div>
+      `;
+    } else {
+      const r = item.result;
+      const color = r.color || CATEGORY_COLORS[r.class_name] || '#6b9b6b';
+      const icon = CATEGORY_ICONS[r.class_name] || '♻️';
+      const pct = (r.confidence * 100).toFixed(1);
+      
+      card.innerHTML = `
+        <img src="${fileItem?.preview || ''}" alt="" class="batch-result-thumb">
+        <div class="batch-result-info">
+          <div class="batch-result-header">
+            <span class="batch-result-icon">${icon}</span>
+            <span class="batch-result-class">${r.display_name}</span>
+            <span class="batch-result-confidence" style="background: ${color}">${pct}%</span>
+          </div>
+          <div class="batch-result-desc">${r.description || ''}</div>
+          <div class="batch-result-bar">
+            <div class="batch-result-bar-fill" style="width: ${pct}%; background: ${color}"></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    batchResultsList.appendChild(card);
+  });
+  
+  batchResults.classList.remove('hidden');
+  batchResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function clearBatchResults() {
+  batchResults.classList.add('hidden');
+  batchResultsList.innerHTML = '';
+}
+
+function updateBatchProgress(current, total) {
+  const pct = (current / total) * 100;
+  batchProgressFill.style.width = `${pct}%`;
+  batchProgressText.textContent = `${current} / ${total}`;
+  batchProgressLabel.textContent = `Processing ${current}/${total}...`;
 }
 
 // ========== Classification ==========
@@ -438,7 +703,6 @@ function init() {
   loadHistory();
   renderHistory();
 }
-
 
 
 // ========== Theme Management ==========
