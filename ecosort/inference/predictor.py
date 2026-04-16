@@ -14,10 +14,21 @@ from ecosort.constants import ONTARIO_CATEGORIES, CATEGORY_ID_TO_NAME
 class WastePredictor:
     """Predictor class for waste classification inference."""
 
-    def __init__(self, model_path: Path, num_classes: int = 6, device: str = None):
+    def __init__(
+        self,
+        model_path: Path,
+        num_classes: int = 6,
+        head_type: str = "eca",
+        backbone: str = "mobilenet_v3_small",
+        device: str = None
+    ):
         self.device = device or ("mps" if torch.backends.mps.is_available() else "cpu")
         self.model = WasteClassifier.from_checkpoint(
-            model_path, num_classes=num_classes, device=self.device
+            model_path,
+            num_classes=num_classes,
+            head_type=head_type,
+            backbone=backbone,
+            device=self.device
         )
         self.model.to(self.device)
         self.model.eval()
@@ -64,18 +75,16 @@ class WastePredictor:
             outputs = self.model(image_tensor)
             probabilities = torch.softmax(outputs, dim=1)[0]
 
-        top_k_probs, top_k_ids = torch.topk(probabilities, k)
+        top_probs, top_indices = torch.topk(probabilities, min(k, len(probabilities)))
 
         results = []
-        for prob, idx in zip(top_k_probs, top_k_ids):
+        for prob, idx in zip(top_probs, top_indices):
             category = self.categories[idx.item()]
-            results.append(
-                {
-                    "class_name": category.name,
-                    "display_name": category.display,
-                    "confidence": prob.item(),
-                    "icon": category.icon,
-                }
-            )
+            results.append({
+                "class_name": category.name,
+                "display_name": category.display,
+                "confidence": prob.item(),
+                "icon": category.icon,
+            })
 
         return results

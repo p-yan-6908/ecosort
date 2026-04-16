@@ -1,5 +1,7 @@
-"""Waste Classifiers with different backbones."""
+"""Waste Classifier Model Architecture."""
 
+from pathlib import Path
+from typing import Literal
 import torch
 import torch.nn as nn
 from torchvision import models
@@ -8,43 +10,46 @@ from ecosort.models.layers import ClassifierHead, ClassifierHeadWithSE, Classifi
 
 
 class WasteClassifier(nn.Module):
-    """MobileNetV3 based waste classifier."""
+    """Waste classification model with configurable backbone and attention head."""
 
     def __init__(
-        self, num_classes: int = 6, dropout: float = 0.2, pretrained: bool = True,
-        head_type: str = "default", backbone: str = "mobilenet_v3_small"
+        self,
+        num_classes: int = 6,
+        head_type: Literal["default", "se", "eca"] = "default",
+        backbone: Literal["mobilenet_v3_small", "mobilenet_v3_large"] = "mobilenet_v3_small",
+        pretrained: bool = True,
+        dropout: float = 0.2,
     ):
         super().__init__()
         self.num_classes = num_classes
-        self.dropout = dropout
+        self.head_type = head_type
+        self.backbone_name = backbone
 
-        # Select backbone
-        if backbone == "mobilenet_v3_large":
-            weights = models.MobileNet_V3_Large_Weights.DEFAULT if pretrained else None
-            self.backbone = models.mobilenet_v3_large(weights=weights)
-            in_features = self.backbone.classifier[0].in_features
-        elif backbone == "efficientnet_v2_s":
-            weights = models.EfficientNet_V2_S_Weights.DEFAULT if pretrained else None
-            self.backbone = models.efficientnet_v2_s(weights=weights)
-            in_features = self.backbone.classifier[1].in_features
-        else:  # mobilenet_v3_small
-            weights = models.MobileNet_V3_Small_Weights.DEFAULT if pretrained else None
-            self.backbone = models.mobilenet_v3_small(weights=weights)
-            in_features = self.backbone.classifier[0].in_features
+        # Load backbone
+        if backbone == "mobilenet_v3_small":
+            weights = models.MobileNet_V3_Small_Weights.IMAGENET1K_V1 if pretrained else None
+            base_model = models.mobilenet_v3_small(weights=weights)
+            backbone_features = 576
+        elif backbone == "mobilenet_v3_large":
+            weights = models.MobileNet_V3_Large_Weights.IMAGENET1K_V1 if pretrained else None
+            base_model = models.mobilenet_v3_large(weights=weights)
+            backbone_features = 960
+        else:
+            raise ValueError(f"Unknown backbone: {backbone}")
 
-        # Select classifier head
-        if head_type == "se":
-            head = ClassifierHeadWithSE(in_features, num_classes, dropout)
+        # Create classifier head (will be assigned to backbone.classifier)
+        if head_type == "default":
+            classifier = ClassifierHead(backbone_features, num_classes, dropout)
+        elif head_type == "se":
+            classifier = ClassifierHeadWithSE(backbone_features, num_classes, dropout)
         elif head_type == "eca":
-            head = ClassifierHeadWithECA(in_features, num_classes, dropout)
+            classifier = ClassifierHeadWithECA(backbone_features, num_classes, dropout)
         else:
-            head = ClassifierHead(in_features, num_classes, dropout)
-        
-        # Replace classifier
-        if backbone == "efficientnet_v2_s":
-            self.backbone.classifier[1] = head
-        else:
-            self.backbone.classifier = head
+            raise ValueError(f"Unknown head_type: {head_type}")
+
+        # Replace classifier in backbone (so keys match: backbone.classifier.*)
+        base_model.classifier = classifier
+        self.backbone = base_model
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.backbone(x)
@@ -59,12 +64,25 @@ class WasteClassifier(nn.Module):
 
     def get_trainable_params(self, backbone: bool = False):
         if backbone:
-            return self.backbone.parameters()
+            return self.parameters()
         return self.backbone.classifier.parameters()
 
     @classmethod
-    def from_checkpoint(cls, checkpoint_path: str, num_classes: int = 6, device: str = "cpu"):
-        model = cls(num_classes=num_classes, pretrained=False)
+    def from_checkpoint(
+        cls,
+        checkpoint_path: str,
+        num_classes: int = 6,
+        head_type: str = "eca",
+        backbone: str = "mobilenet_v3_small",
+        device: str = "cpu"
+    ):
+        """Load model from checkpoint."""
+        model = cls(
+            num_classes=num_classes,
+            head_type=head_type,
+            backbone=backbone,
+            pretrained=False
+        )
         state_dict = torch.load(checkpoint_path, map_location=device, weights_only=True)
         model.load_state_dict(state_dict)
         model.eval()
