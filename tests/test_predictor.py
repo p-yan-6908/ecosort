@@ -8,6 +8,7 @@ import torch
 import numpy as np
 
 from ecosort.inference.predictor import WastePredictor
+from ecosort.models.classifier import WasteClassifier
 
 
 class TestWastePredictor:
@@ -26,12 +27,13 @@ class TestWastePredictor:
         """Create a sample image."""
         return Image.new('RGB', (224, 224), color='blue')
 
-    def test_predictor_initialization(self):
+    def test_predictor_initialization(self, mock_model):
         """Test predictor can be created with valid model path."""
         with patch.object(WasteClassifier, 'from_checkpoint') as mock_load:
-            mock_load.return_value = MagicMock()
+            mock_load.return_value = mock_model
             predictor = WastePredictor(Path("dummy.pth"))
             assert predictor is not None
+            assert predictor.model is not None
 
     def test_predict_returns_dict(self, mock_model, sample_image):
         """Test predict returns a dictionary with expected keys."""

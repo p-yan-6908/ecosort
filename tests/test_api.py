@@ -7,16 +7,11 @@ from io import BytesIO
 from PIL import Image
 
 from ecosort.api.main import app
+from ecosort.api.dependencies import _predictor
 
 
 @pytest.fixture
-def client():
-    """Create a test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
-def mock_predictor_fixture():
+def mock_predictor():
     """Create mock predictor for dependency injection."""
     mock = MagicMock()
     mock.predict.return_value = {
@@ -42,6 +37,14 @@ def mock_predictor_fixture():
         {"class_name": "garbage", "display_name": "Garbage", "confidence": 0.01, "icon": "🗑️"},
     ]
     return mock
+
+
+@pytest.fixture
+def client(mock_predictor):
+    """Create a test client with mocked predictor."""
+    with patch('ecosort.api.dependencies._predictor', mock_predictor):
+        with patch('ecosort.api.dependencies.get_predictor', return_value=mock_predictor):
+            yield TestClient(app)
 
 
 class TestHealthEndpoint:
@@ -92,11 +95,8 @@ class TestPredictEndpoint:
         img_bytes.seek(0)
         return ("test.jpg", img_bytes, "image/jpeg")
 
-    @patch('ecosort.api.dependencies._predictor')
-    def test_predict_returns_result(self, mock_predictor, client, mock_predictor_fixture):
+    def test_predict_returns_result(self, client, mock_predictor):
         """Test prediction endpoint returns result."""
-        mock_predictor.return_value = mock_predictor_fixture
-        
         files = {"file": self.create_image_file()}
         response = client.post("/predict", files=files)
         
@@ -112,11 +112,8 @@ class TestPredictEndpoint:
         response = client.post("/predict", files=files)
         assert response.status_code == 400
 
-    @patch('ecosort.api.dependencies._predictor')
-    def test_predict_top_k_returns_results(self, mock_predictor, client, mock_predictor_fixture):
+    def test_predict_top_k_returns_results(self, client, mock_predictor):
         """Test top-k prediction endpoint."""
-        mock_predictor.return_value = mock_predictor_fixture
-        
         files = {"file": self.create_image_file()}
         response = client.post("/predict/top-k?k=3", files=files)
         
