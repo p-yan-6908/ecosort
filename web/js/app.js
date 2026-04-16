@@ -432,7 +432,6 @@ function handleFile(file) {
 }
 
 function clearSelection() {
-function clearSelection() {
   selectedFile = null;
   fileInput.value = '';
   cameraInput.value = '';
@@ -996,17 +995,15 @@ function toggleHelpModal() {
 document.addEventListener('keydown', handleKeyboardShortcut);
 
 // Help modal close handlers
+
+// Help modal close handlers
 $('#help-close')?.addEventListener('click', toggleHelpModal);
 $('#help-backdrop')?.addEventListener('click', toggleHelpModal);
-// Help modal close handlers - fix syntax
-$("#help-close")?.addEventListener("click", toggleHelpModal);
-$("#help-backdrop")?.addEventListener("click", toggleHelpModal);
 
 // Run init when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
 }
 
-}
