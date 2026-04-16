@@ -155,3 +155,67 @@ model:
 - `config.yaml` - Updated with best configuration
 - `scripts/benchmark_model.py` - Comprehensive benchmark script
 
+
+---
+
+## Final Training Results
+
+### Full Model Training (Complete)
+**Date:** 2026-04-15  
+**Configuration:** MobileNetV3-Small + ECA + Label Smoothing 0.1
+
+#### Phase 1: Frozen Backbone Training
+| Epoch | Train Loss | Train Acc | Val Loss | Val Acc |
+|-------|------------|-----------|----------|---------|
+| 1 | 0.7985 | 84.34% | 0.7713 | 89.29% |
+| 2 | 0.6360 | 91.67% | 0.7148 | 90.02% |
+| 3 | 0.5845 | 93.94% | 0.6289 | 93.10% |
+| 4 | 0.5422 | 96.08% | 0.5992 | 93.65% |
+| 5 | 0.5275 | 96.35% | 0.6128 | 93.83% |
+| 6 | 0.5030 | 97.79% | 0.6377 | 92.20% |
+| 7 | 0.4898 | 98.13% | 0.6229 | 94.37% |
+| 8 | 0.4880 | 98.23% | 0.5865 | 94.56% |
+| 9 | 0.4785 | 98.76% | 0.5791 | **95.10%** |
+| 10 | 0.4779 | 98.29% | 0.5804 | 94.92% |
+
+**Best Phase 1:** 95.10% at epoch 9
+
+#### Phase 2: Fine-tuning Full Network
+| Epoch | Train Loss | Train Acc | Val Loss | Val Acc |
+|-------|------------|-----------|----------|---------|
+| 1 | 0.4792 | 98.59% | 0.5519 | 95.64% |
+| 2 | 0.4665 | 99.00% | 0.5548 | 96.01% |
+| 3 | 0.4681 | 99.23% | 0.5619 | 96.55% |
+| 4 | 0.4643 | 99.10% | 0.5402 | 96.37% |
+| 5 | 0.4592 | 99.30% | 0.5296 | 96.73% |
+| 6 | 0.4574 | 99.16% | 0.5596 | 96.37% |
+| 7 | 0.4569 | 99.50% | 0.5342 | **97.28%** |
+| ... | ... | ... | ... | ... |
+| 17 | 0.4483 | 99.40% | 0.5539 | 96.55% |
+
+**Best Phase 2:** 97.28% at epoch 7  
+**Early stopping:** epoch 17 (no improvement for 10 epochs)
+
+#### Final Test Set Evaluation
+- **Test Loss:** 0.4868
+- **Test Accuracy:** **97.32%**
+
+---
+
+## Summary
+
+| Metric | Value |
+|--------|-------|
+| Final Test Accuracy | **97.32%** |
+| Final Validation Accuracy | 97.28% |
+| Model Parameters | 1.10M |
+| Training Epochs | 27 total (10 + 17) |
+| Training Time | ~10 minutes |
+| Model Size | ~4 MB |
+
+### Comparison with Baseline
+| Model | Accuracy | Improvement |
+|-------|----------|-------------|
+| Baseline (default) | 96.37% | - |
+| **Final Model (ECA + LS)** | **97.32%** | **+0.95%** |
+
