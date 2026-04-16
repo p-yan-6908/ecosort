@@ -1,8 +1,11 @@
 """API Dependencies - Model Loading"""
 
+import logging
 from pathlib import Path
 from ecosort.inference.predictor import WastePredictor
 from ecosort.config import Config
+
+logger = logging.getLogger(__name__)
 
 _predictor: WastePredictor = None
 
@@ -26,12 +29,10 @@ def load_model(config: Config):
     
     if model_path and model_path.exists():
         _predictor = WastePredictor(model_path, num_classes=config.num_classes)
-        print(f"✓ Model loaded from {model_path}")
-        print(f"  Model parameters: {sum(p.numel() for p in _predictor.model.parameters()):,}")
+        logger.info("Model loaded from %s", model_path)
+        logger.info("Model parameters: %d", sum(p.numel() for p in _predictor.model.parameters()))
     else:
-        print(f"Warning: No model checkpoint found. Checked:")
-        for cp in checkpoints:
-            print(f"  - {cp}")
+        logger.warning("No model checkpoint found. Checked: %s", [str(cp) for cp in checkpoints])
 
 
 def get_predictor() -> WastePredictor:

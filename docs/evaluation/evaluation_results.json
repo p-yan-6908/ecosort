@@ -1,0 +1,250 @@
+{
+  "val": {
+    "model": {
+      "architecture": "MobileNetV3-Small + ECA",
+      "checkpoint": "models/checkpoints/best_model.pth",
+      "num_parameters": 1096073
+    },
+    "overall": {
+      "accuracy": 0.9728,
+      "top2_accuracy": 0.9982,
+      "top3_accuracy": 0.9982,
+      "total_images": 551,
+      "avg_inference_ms": 2.39,
+      "total_inference_ms": 1318.1
+    },
+    "per_class_accuracy": {
+      "blue_bin": 0.9972,
+      "green_bin": 1.0,
+      "garbage": 0.55,
+      "hazardous": 1.0,
+      "e_waste": 1.0,
+      "yard_waste": 0.7727
+    },
+    "classification_report": {
+      "Blue Bin (Recyclables)": {
+        "precision": 0.9727520435967303,
+        "recall": 0.9972067039106145,
+        "f1-score": 0.9848275862068966,
+        "support": 358.0
+      },
+      "Green Bin (Organics)": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 114.0
+      },
+      "Garbage (Black Bin)": {
+        "precision": 0.9166666666666666,
+        "recall": 0.55,
+        "f1-score": 0.6875,
+        "support": 20.0
+      },
+      "Household Hazardous Waste": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 15.0
+      },
+      "Electronic Waste": {
+        "precision": 0.8461538461538461,
+        "recall": 1.0,
+        "f1-score": 0.9166666666666666,
+        "support": 22.0
+      },
+      "Yard Waste": {
+        "precision": 1.0,
+        "recall": 0.7727272727272727,
+        "f1-score": 0.8717948717948718,
+        "support": 22.0
+      },
+      "accuracy": 0.9727767695099818,
+      "macro avg": {
+        "precision": 0.9559287594028739,
+        "recall": 0.8866556627729811,
+        "f1-score": 0.9101315207780726,
+        "support": 551.0
+      },
+      "weighted avg": {
+        "precision": 0.9731287650750405,
+        "recall": 0.9727767695099818,
+        "f1-score": 0.9703528669840704,
+        "support": 551.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        357,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        114,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        9,
+        0,
+        11,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        15,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        22,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        4,
+        17
+      ]
+    ]
+  },
+  "test": {
+    "model": {
+      "architecture": "MobileNetV3-Small + ECA",
+      "checkpoint": "models/checkpoints/best_model.pth",
+      "num_parameters": 1096073
+    },
+    "overall": {
+      "accuracy": 0.9678,
+      "top2_accuracy": 0.9964,
+      "top3_accuracy": 1.0,
+      "total_images": 559,
+      "avg_inference_ms": 1.17,
+      "total_inference_ms": 655.6
+    },
+    "per_class_accuracy": {
+      "blue_bin": 0.9944,
+      "green_bin": 0.9913,
+      "garbage": 0.5,
+      "hazardous": 0.9333,
+      "e_waste": 0.9167,
+      "yard_waste": 0.9583
+    },
+    "classification_report": {
+      "Blue Bin (Recyclables)": {
+        "precision": 0.967479674796748,
+        "recall": 0.9944289693593314,
+        "f1-score": 0.9807692307692307,
+        "support": 359.0
+      },
+      "Green Bin (Organics)": {
+        "precision": 1.0,
+        "recall": 0.991304347826087,
+        "f1-score": 0.9956331877729258,
+        "support": 115.0
+      },
+      "Garbage (Black Bin)": {
+        "precision": 0.8461538461538461,
+        "recall": 0.5,
+        "f1-score": 0.6285714285714286,
+        "support": 22.0
+      },
+      "Household Hazardous Waste": {
+        "precision": 1.0,
+        "recall": 0.9333333333333333,
+        "f1-score": 0.9655172413793104,
+        "support": 15.0
+      },
+      "Electronic Waste": {
+        "precision": 0.9565217391304348,
+        "recall": 0.9166666666666666,
+        "f1-score": 0.9361702127659575,
+        "support": 24.0
+      },
+      "Yard Waste": {
+        "precision": 0.8846153846153846,
+        "recall": 0.9583333333333334,
+        "f1-score": 0.92,
+        "support": 24.0
+      },
+      "accuracy": 0.9677996422182469,
+      "macro avg": {
+        "precision": 0.9424617741160688,
+        "recall": 0.8823444417531253,
+        "f1-score": 0.9044435502098088,
+        "support": 559.0
+      },
+      "weighted avg": {
+        "precision": 0.9662394970256116,
+        "recall": 0.9677996422182469,
+        "f1-score": 0.9650328901532815,
+        "support": 559.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        357,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        114,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        11,
+        0,
+        11,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        14,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        22,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        23
+      ]
+    ]
+  }
+}
